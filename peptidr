@@ -7,6 +7,7 @@ import numpy as np
 from Bio import SeqIO
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from scipy.sparse import find
 
 from sklearn.feature_extraction import FeatureHasher
 from sklearn.model_selection import train_test_split
@@ -68,9 +69,6 @@ def plot_classifier(Xtest, ytest, score, xx, yy, Z, clf_name, fig):
     Z = Z.reshape(xx.shape)
     ax.contourf(xx, yy, Z, cmap=plt.cm.RdBu, alpha=.8)
 
-    # Plot also the training points
-    #ax.scatter(Xtrain_2d[:, 0], Xtrain_2d[:, 1], c=ytrain, cmap=cm_bright)
-    # and testing points
     ax.scatter(Xtest[:, 0], Xtest[:, 1], c=ytest,
             cmap=ListedColormap(['#FF0000', '#0000FF']), alpha=0.6)
 
@@ -84,16 +82,13 @@ def plot_classifier(Xtest, ytest, score, xx, yy, Z, clf_name, fig):
 
 
 def plot_data(Xtrain, ytrain, ytest, xx, yy):
-    # just plot the dataset first
+    """ Plot the input datapoints """
     plt.figure(1)
 
     cm_bright = ListedColormap(['#FF0000', '#0000FF'])
     ax = plt.subplot(np.ceil((len(classifiers) + 1)/2), 2, 1)
     ax.set_title("Input data")
-    # Plot the training points
     ax.scatter(Xtrain[:, 0], Xtrain[:, 1], c=ytrain, cmap=cm_bright)
-    # and testing points
-    #ax.scatter(Xtest_2d[:, 0], Xtest_2d[:, 1], c=ytest, cmap=cm_bright, alpha=0.6)
     ax.set_xlim(xx.min(), xx.max())
     ax.set_ylim(yy.min(), yy.max())
     ax.set_xticks(())
@@ -101,7 +96,7 @@ def plot_data(Xtrain, ytrain, ytest, xx, yy):
     text = 'Tr+:{0:.2f}, Te+: {1:.2f}'.format(np.count_nonzero(ytrain)/float(ytrain.shape[0]), \
                                             np.count_nonzero(ytest)/float(ytest.shape[0]))
  
-    ax.text(xx.max() - .6, yy.min() + .6, text, size=10, horizontalalignment='right') 
+    ax.text(xx.max() - .3, yy.min() + .3, text, size=10, horizontalalignment='right')
 
 
 def main():
@@ -110,6 +105,8 @@ def main():
     parser.add_argument('--data', default='./data/', type=str, help='Root dir for data files')
     parser.add_argument('--membrane', default='non_tm', type=str, choices=['tm', 'non_tm'], help='Type of membrane')
     parser.add_argument('--test', default=.25, type=float, help='Percetange of data that will be used for test')
+    parser.add_argument('--kgramin', default=3, type=int, help='Min range of the K-Gram used on protein sequences')
+    parser.add_argument('--kgramax', default=6, type=int, help='Max range of the K-Gram used on protein sequences')
     args = parser.parse_args()
 
     print("* Initializing Peptidr...")
@@ -141,13 +138,23 @@ def main():
             np.count_nonzero(y)/float(len(y)), args.membrane))
 
     print('* Processing read data...')
-    #from sklearn.feature_extraction.text import CountVectorizer
-    #countvec = CountVectorizer(ngram_range=(8,8), analyzer='char') 
-    #X_counts = countvec.fit_transform(seqs)
-    #featnames = countvec.get_feature_names()
-    #X = FeatureHasher(input_type='string').transform([list(zip(featnames,x)) for x in X_counts])
+    from sklearn.feature_extraction.text import CountVectorizer
+    countvec = CountVectorizer(ngram_range=(args.kgramin,args.kgramax), analyzer='char')
+    X_counts = countvec.fit_transform(seqs)
+    featnames = countvec.get_feature_names()
+
+    features = []
+    for x in X_counts:
+        nonzeros = find(x)
+        feature = {}
+        for i in range(len(nonzeros[0])):
+            n = nonzeros
+            feature[featnames[n[1][i]]] = n[2][i]
+        features.append(feature)
     
-    X = FeatureHasher(input_type='string').transform(seqs)
+    X = FeatureHasher(input_type='string').transform(features)
+    
+    #X = FeatureHasher(input_type='string').transform(seqs)
 
     # preprocess
     #X = StandardScaler(with_mean=False).fit_transform(X)
