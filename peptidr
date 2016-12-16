@@ -10,6 +10,7 @@ from matplotlib.colors import ListedColormap
 from scipy.sparse import find
 
 from sklearn.feature_extraction import FeatureHasher
+#from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -107,6 +108,7 @@ def main():
     parser.add_argument('--test', default=.25, type=float, help='Percetange of data that will be used for test')
     parser.add_argument('--kgramin', default=3, type=int, help='Min range of the K-Gram used on protein sequences')
     parser.add_argument('--kgramax', default=6, type=int, help='Max range of the K-Gram used on protein sequences')
+    parser.add_argument('--hweight', default=3, type=int, help='Weight of the H region of the peptide, if existant')
     args = parser.parse_args()
 
     print("* Initializing Peptidr...")
@@ -120,7 +122,15 @@ def main():
     for f in glob.glob(path):
         recs = SeqIO.parse(f, 'fasta')
         for rec in recs:
+            # find the 'h' region and give those aminoacids more weight
             seq = str(rec.seq).split('#')[0][:40]
+            reg = str(rec.seq).split('#')[1]
+            hmin = reg.find('h')
+            hmax = reg.rfind('h')
+            if hmin != -1 and hmax != -1:
+                seqh = seq[hmin:hmax]
+                seq += args.hweight * seqh
+
             seqs.append(seq)
             y.append(1)
     
@@ -153,11 +163,8 @@ def main():
         features.append(feature)
     
     X = FeatureHasher(input_type='string').transform(features)
-    
+    #X = HashingVectorizer(analyzer='char', ngram_range=(args.kgramin,args.kgramax)).transform(seqs)
     #X = FeatureHasher(input_type='string').transform(seqs)
-
-    # preprocess
-    #X = StandardScaler(with_mean=False).fit_transform(X)
 
     # split train / test
     Xtrain, Xtest, ytrain, ytest = train_test_split(X, y, test_size=args.test, random_state=42)
