@@ -103,7 +103,7 @@ def plot_data(Xtrain, ytrain, ytest, xx, yy):
 def main():
     # parse args
     parser = argparse.ArgumentParser(description='Peptidr')
-    parser.add_argument('--data', default='./data/', type=str, help='Root dir for data files')
+    parser.add_argument('--data', default='../data/', type=str, help='Root dir for data files')
     parser.add_argument('--membrane', default='non_tm', type=str, choices=['tm', 'non_tm'], help='Type of membrane')
     parser.add_argument('--test', default=.25, type=float, help='Percetange of data that will be used for test')
     parser.add_argument('--kgramin', default=3, type=int, help='Min range of the K-Gram used on protein sequences')
