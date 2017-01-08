@@ -1,0 +1,303 @@
+#!/usr/bin/env python
+
+import glob
+import itertools
+import argparse
+import numpy as np
+from Bio import SeqIO
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from scipy.sparse import find
+
+from sklearn.feature_extraction import FeatureHasher
+#from sklearn.feature_extraction.text import HashingVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+#from sklearn.gaussian_process import GaussianProcessClassifier
+#from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+#from sklearn.naive_bayes import GaussianNB
+#from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.neural_network import MLPClassifier
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics import confusion_matrix
+from sklearn.feature_extraction.text import CountVectorizer
+
+
+""" All the classifiers that will be used """
+classifiers = [
+     KNeighborsClassifier(5),
+     SVC(kernel="linear", C=0.025),
+     SVC(gamma=2, C=1),
+     DecisionTreeClassifier(max_depth=5),
+     RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
+     AdaBoostClassifier(),
+     MLPClassifier(alpha=1),
+     # The following require non-sparse input matrices
+     #GaussianNB(),
+     #QuadraticDiscriminantAnalysis(),
+     #GaussianProcessClassifier(1.0 * RBF(1.0), warm_start=True),
+]
+def process_proteome(clfs,BoW):
+    print('---New Protomes----')
+    human_path='../data/Homo_sapiens.fa'
+    mouse_path='../data/Mus_muscul.fa'
+    mouse = list(SeqIO.parse(mouse_path, 'fasta'))
+    human = list(SeqIO.parse(human_path, 'fasta'))
+    human_sq=[]
+    mouse_sq=[]
+    for sqs in human:
+        seq = str(sqs.seq)[:40]
+        human_sq.append(seq)
+    for sqs2 in mouse:
+        seq2 = str(sqs2.seq)[:40]
+        mouse_sq.append(seq2) 
+    print(len(human_sq))
+    print(len(mouse_sq))
+
+    #countvecH = CountVectorizer(ngram_range=(krgram1,kgram2), analyzer='char')
+    X_countsH = BoW.fit_transform(human_sq)
+    featnamesH = BoW.get_feature_names()
+
+    #countvecM = CountVectorizer(ngram_range=(krgram1,kgram2), analyzer='char')
+    X_countsM = BoW.fit_transform(mouse_sq)
+    featnamesM = BoW.get_feature_names()
+
+
+    featuresH = []
+    for x in X_countsH:
+        nonzerosH = find(x)
+        featureH = {}
+        for i in range(len(nonzerosH[0])):
+            nH = nonzerosH
+            featureH[featnamesH[nH[1][i]]] = nH[2][i]
+        featuresH.append(featureH)
+
+    featuresM = []
+    for x in X_countsM:
+        nonzerosM = find(x)
+        featureM = {}
+        for i in range(len(nonzerosM[0])):
+            nM = nonzerosM
+            featureM[featnamesM[nM[1][i]]] = nM[2][i]
+        featuresM.append(featureM)
+    
+    X_h = FeatureHasher(input_type='string').transform(featuresH)
+    X_m = FeatureHasher(input_type='string').transform(featuresM)
+    X_m_2d = TruncatedSVD(n_components=2).fit_transform(X_m)
+    X_h_2d = TruncatedSVD(n_components=2).fit_transform(X_h)
+    '''
+    ypred_m1 = clf_mlp.predict(X_m_2d)
+    ypred_m2 = clf_svm.predict(X_m_2d)
+    m_mlp=np.sum(ypred_m1)
+    m_svm=np.sum(ypred_m2)
+    print('SVM Predicts ---- {0} Peptide Signals in Mouse'.format(m_svm))
+    print('MLP Predicts ---- {0} Peptide Signals in Mouse'.format(m_mlp))
+
+    ypred_h1 = clf_mlp.predict(X_h_2d)
+    ypred_h2 = clf_svm.predict(X_h_2d)
+    h_mlp=np.sum(ypred_h1)
+    h_svm=np.sum(ypred_h2)
+    print('SVM Predicts ---- {0} Peptide Signals in Human'.format(h_svm))
+    print('MLP Predicts ---- {0} Peptide Signals in Human'.format(h_mlp))
+    '''
+    for clf in clfs:
+        clf_name = str(clf).split('(')[0]
+        print('* Scoring {}...'.format(clf_name))
+        print('--- args:: {}'.format(str(clf).split('(')[1]))
+        print('-------------------------------------')
+        
+        # fit the model, test the results
+        ypred_h = clf.predict(X_h_2d)
+        ypred_m = clf.predict(X_m_2d)
+        clf_h=0
+        clf_m=0
+        clf_h=np.sum(ypred_h)
+        clf_m=np.sum(ypred_m)  
+        print('{0} Predicts ---- {1} Peptide Signals in Human'.format(clf_name,clf_h))
+        print('{0} Predicts ---- {1} Peptide Signals in Mouse'.format(clf_name,clf_m))
+
+       
+
+
+
+
+
+
+
+def plot_confusion_matrix(ytest, ypred, clf_name, fig):
+    """ Plot a confusion matrix with the result of the classifier """
+    plt.figure(2)
+    cnf = confusion_matrix(ytest, ypred, labels=[0,1])
+    cnf = cnf.astype('float') / cnf.sum(axis=1)[:, np.newaxis]
+   
+    ax = plt.subplot(np.ceil(len(classifiers)/3), 3, fig-1)
+    ax.set_title(clf_name)
+    plt.imshow(cnf, interpolation='nearest', cmap=plt.cm.Blues)
+    thresh = cnf.max() / 2.0
+    for i, j in itertools.product(range(cnf.shape[0]), range(cnf.shape[1])):
+        ax.text(j, i, '{:.2f}'.format(cnf[i, j]), horizontalalignment="center", color="white" if cnf[i, j] > thresh else "black")
+
+    ax.set_xlabel('Pred')
+    ax.set_ylabel('True')
+
+    ax.set_xticks([0, 1])
+    ax.set_yticks([0, 1])
+    ax.set_xticklabels(['-','+'])
+    ax.set_yticklabels(['-','+'])
+
+
+def plot_classifier(Xtest, ytest, score, xx, yy, Z, clf_name, fig):
+    """ Color plor the result of the classifier """
+    plt.figure(1)    
+    ax = plt.subplot(np.ceil((len(classifiers) + 1)/2), 2, fig)
+    Z = Z.reshape(xx.shape)
+    ax.contourf(xx, yy, Z, cmap=plt.cm.RdBu, alpha=.8)
+
+    ax.scatter(Xtest[:, 0], Xtest[:, 1], c=ytest,
+            cmap=ListedColormap(['#FF0000', '#0000FF']), alpha=0.6)
+
+    ax.set_xlim(xx.min(), xx.max())
+    ax.set_ylim(yy.min(), yy.max())
+    ax.set_xticks(())
+    ax.set_yticks(())
+    ax.set_title(clf_name)
+    ax.text(xx.max() - .3, yy.min() + .3, ('%.2f' % score).lstrip('0'),
+            size=15, horizontalalignment='right')
+
+
+def plot_data(Xtrain, ytrain, ytest, xx, yy):
+    """ Plot the input datapoints """
+    plt.figure(1)
+
+    cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+    ax = plt.subplot(np.ceil((len(classifiers) + 1)/2), 2, 1)
+    ax.set_title("Input data")
+    ax.scatter(Xtrain[:, 0], Xtrain[:, 1], c=ytrain, cmap=cm_bright)
+    ax.set_xlim(xx.min(), xx.max())
+    ax.set_ylim(yy.min(), yy.max())
+    ax.set_xticks(())
+    ax.set_yticks(())
+    text = 'Tr+:{0:.2f}, Te+: {1:.2f}'.format(np.count_nonzero(ytrain)/float(ytrain.shape[0]), \
+                                            np.count_nonzero(ytest)/float(ytest.shape[0]))
+ 
+    ax.text(xx.max() - .3, yy.min() + .3, text, size=10, horizontalalignment='right')
+
+
+def main():
+    # parse args
+    parser = argparse.ArgumentParser(description='Peptidr')
+    parser.add_argument('--data', default='../data/', type=str, help='Root dir for data files')
+    parser.add_argument('--membrane', default='non_tm', type=str, choices=['tm', 'non_tm'], help='Type of membrane')
+    parser.add_argument('--test', default=.25, type=float, help='Percetange of data that will be used for test')
+    parser.add_argument('--kgramin', default=3, type=int, help='Min range of the K-Gram used on protein sequences')
+    parser.add_argument('--kgramax', default=6, type=int, help='Max range of the K-Gram used on protein sequences')
+    parser.add_argument('--hweight', default=3, type=int, help='Weight of the H region of the peptide, if existant')
+    args = parser.parse_args()
+
+    print("* Initializing Peptidr...")
+
+    seqs = []
+    y = []
+
+    # read all positive training sequences
+    print('* Reading data...')
+    path = args.data + '/train/positive_examples/' + args.membrane + '/*.faa' 
+    for f in glob.glob(path):
+        recs = SeqIO.parse(f, 'fasta')
+        for rec in recs:
+            # find the 'h' region and give those aminoacids more weight
+            seq = str(rec.seq).split('#')[0][:40]
+            reg = str(rec.seq).split('#')[1]
+            hmin = reg.find('h')
+            hmax = reg.rfind('h')
+            if hmin != -1 and hmax != -1:
+                seqh = seq[hmin:hmax]
+                seq += args.hweight * seqh
+
+            seqs.append(seq)
+            y.append(1)
+    
+    # read all negative training sequences
+    path = args.data + '/train/negative_examples/' + args.membrane + '/*.faa' 
+    for f in glob.glob(path):
+        recs = SeqIO.parse(f, 'fasta')
+        for rec in recs:
+            seq = str(rec.seq).split('#')[0][:40]
+            seqs.append(seq)
+            y.append(0)
+    
+    y = np.array(y)
+    print('-- Size: {0}, +: {1:.2f}, Type: {2}'.format(len(y), 
+            np.count_nonzero(y)/float(len(y)), args.membrane))
+
+    print('* Processing read data...')
+    
+    countvec = CountVectorizer(ngram_range=(args.kgramin,args.kgramax), analyzer='char')
+    X_counts = countvec.fit_transform(seqs)
+    featnames = countvec.get_feature_names()
+
+    features = []
+    for x in X_counts:
+        nonzeros = find(x)
+        feature = {}
+        for i in range(len(nonzeros[0])):
+            n = nonzeros
+            feature[featnames[n[1][i]]] = n[2][i]
+        features.append(feature)
+    
+    X = FeatureHasher(input_type='string').transform(features)
+    #X = HashingVectorizer(analyzer='char', ngram_range=(args.kgramin,args.kgramax)).transform(seqs)
+    #X = FeatureHasher(input_type='string').transform(seqs)
+
+    # split train / test
+    Xtrain, Xtest, ytrain, ytest = train_test_split(X, y, test_size=args.test, random_state=42)
+
+    # project data into a plotable dimension
+    Xtrain_2d = TruncatedSVD(n_components=2).fit_transform(Xtrain)
+    Xtest_2d = TruncatedSVD(n_components=2).fit_transform(Xtest)
+
+    # init mesh for plotting
+    h = .2
+    x_min, x_max = Xtrain_2d[:, 0].min() - .5, Xtrain_2d[:, 0].max() + .5
+    y_min, y_max = Xtrain_2d[:, 1].min() - .5, Xtrain_2d[:, 1].max() + .5
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                         np.arange(y_min, y_max, h))
+
+    # plot dataset
+    plot_data(Xtrain_2d, ytrain, ytest, xx, yy)
+
+    fig = 2
+    for clf in classifiers:
+        clf_name = str(clf).split('(')[0]
+        print('* Training {}...'.format(clf_name))
+        print('--- args:: {}'.format(str(clf).split('(')[1]))
+        print('-------------------------------------')
+        
+        # fit the model, test the results
+        clf.fit(Xtrain_2d, ytrain)
+        score = clf.score(Xtest_2d, ytest)
+        ypred = clf.predict(Xtest_2d) 
+
+        # get the decision boundary
+        if hasattr(clf, "decision_function"):
+            Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+        else:
+            conc = np.c_[xx.ravel(), yy.ravel()]
+            Z = clf.predict_proba(conc)[:, 1]
+
+        # plot all the things!
+        plot_classifier(Xtest_2d, ytest, score, xx, yy, Z, clf_name, fig)
+        plot_confusion_matrix(ytest, ypred, clf_name, fig)
+
+        fig += 1
+    process_proteome(classifiers,countvec)
+    plt.tight_layout()
+    plt.show()
+    
+
+
+if __name__ == '__main__':
+    main()
