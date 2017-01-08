@@ -13,8 +13,8 @@ I was then working on visualizing signal peptides using weblogo as recomended. I
 It is clear that the A and L proteins affected the signal peptides. I also removed the first amino acids as it made visualisation difficult, it was too heavily loaded in all files.
 
 ## 05-01-2017
-Wrote the the findings in the report including the weblogo difference in sequences.
+Wrote the the findings in the report including the weblogo difference in the sequences.
 
 ## 08-01-2017
-Wrote the abstract and edited grammatical and language errors in the report.
+Wrote the abstract and edited grammatical and language errors in the report. Also performed a final completeness check over the report and code. 
 
