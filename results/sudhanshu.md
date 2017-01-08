@@ -9,6 +9,7 @@ I also read some of the other works that were cited by the Signal P paper. I sum
 I was then working on visualizing signal peptides using weblogo as recomended. I decided to take one sequence file from the positve examples and compare it with one of the negatives. The results where as follows:
 ![signal peptides](./plots/logo_p.png)
 ![signal peptides2](./plots/logo_neg.png)
+ 
 It is clear that the A and L proteins affected the signal peptides. I also removed the first amino acid as it made visualisation difficult it was too heavily loaded in all files.
 
 ## 05-01-2017
