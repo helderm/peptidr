@@ -1,17 +1,20 @@
 ## 15-12-2016
 Met with Sudanshu and Helder for intial discussions. Helder mentioned he had done some work and that feature creation seems to be the biggest challenge. The team discussed Bag of Words features and n-grams on the amino acids. The team resovled to work independenlty over the chrismas period.
 ## 20-12-2016
-Started reading some notable works in the area of signal peptide detection. Realised one needed to understand protein transport and targeting first. This site proved to be a good reference http://www.signalpeptide.de/.
+Started reading some notable works in the area of signal peptide detection. Realised one needed to understand protein transport and targeting first. This site proved to be a good reference http://www.signalpeptide.de/. Very good definitions for first timers
 ## 02-01-2017
 After getting a better unstandning of what signal peptides are and what they do. I read the following paper.
 Tittle: Machine learning approaches for the prediction of signal peptides
+Link :http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.113.3288&rep=rep1&type=pdf
 and other protein sorting signals
 Autors:Nielsen e.t.al
-The paper foused on a Hidden Markov Models and Artificial Neural Networks. The best approach seemed to be a hybrid NN-HMM.
+The paper foused on a Hidden Markov Models and Artificial Neural Networks. The best approach seemed to be a hybrid NN-HMM. I found that windowing that was used to create feature for the hidden markov model was a bit complex. We had prior this considered Neural Nets and HMMs individually. There was some debate on how the HMM models will be structured - I had suggested that we train two models - one for signal peptides and another for no signal peptide. Classification will be perfomed by scoring the sequence trough each of the models. We decided against HMMs.
 ## 04-01-2017
 I was assigned the task of implementation of the trained models on new proteomes. Initailly there were some doubts as to which proteomes where right ones - which filters to put on biomart. After some googling i settled on the ftp site for biomart http://www.ensembl.org/info/data/ftp/index.html. The species I chose were `Homo Sepien` and `Mus musculus`.
 ## 05-01-2017
-Wrote code to get predictions on the new proteomes. Initally I had incoorectly created new vectorizers for the new datasets. I corrected this after some errors from the `predict()` methods. The predicted peptides in Human were as follows:
+Wrote code to get predictions on the new proteomes. Initally I had incoorectly created new vectorizers for the new datasets. I corrected this after some errors from the `predict()` methods. There were some things that I needed to consider when I was writing this code - first I made the mistake of creating new n-grams instead of using thoses created in training - this created runtime dimentionality errors. Advice use the n-grams created in training.
+
+The predicted peptides in Human were as follows:
 
 Classifier | Predicted Peptides Signal
 ------------|--------------------------
@@ -23,6 +26,7 @@ Random Forest | 48916
 Adaboost | 49505  
 MLP | 38492 
 
+This figures seem a biased upwards compared to other sourses for example in potein atlas (link :http://www.proteinatlas.org/humanproteome/secretome) they found only about 20000 proteins that contain a signal peptied.
 ## 06-01-2017
 I then documented the results in the latex document. In addition to this I also wrote the the discussion of results and other observations.
 
