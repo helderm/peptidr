@@ -26,7 +26,7 @@ Random Forest | 48916
 Adaboost | 49505  
 MLP | 38492 
 
-This figures seem a biased upwards compared to other sourses for example in potein atlas (link :http://www.proteinatlas.org/humanproteome/secretome) they found only about 20000 proteins that contain a signal peptied.
+This figures seem a biased upwards compared to other sourses for example in potein atlas (link :http://www.proteinatlas.org/humanproteome/secretome) they found only about 20000 proteins that contain a signal peptied. Since the training data a baised towards those that had signal peptieds this is to be expected.
 ## 06-01-2017
 I then documented the results in the latex document. In addition to this I also wrote the the discussion of results and other observations.
 
