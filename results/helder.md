@@ -14,7 +14,7 @@ A research was started to find the best method to represent the protein sequence
 The idea here was to create some sort of 'bag of words' representation that the clasifiers can train on. More on bag of words can be found here: https://en.wikipedia.org/wiki/Bag-of-words_model
 
 ## 20-12-2016
-A typical method of K-gram vectorizing followed by Feature Hashing , as such we transformed the input using these techniques.
+A typical method of vectorizing sequences and text is - K-gram vectorizing followed by Feature Hashing , as such we transformed the input using these techniques.
 This basically finds the most occuring short sub-sequnces and uses a count of them as features. We looked at subsequences of bewteen 3-6 AA.
 Python's sklearn library has very good implementations of the K-gram vectorizing. This can be found here :http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
 There are two very nice examples out of examples at the bottom of the page. 
