@@ -1,10 +1,12 @@
+## 15-12-2016
+Met with team to discuss the work. Main focus was discussing how to create features. We agreed to go and research more on this
+
 ## 17-12-2016
-This day was spent getting familiar with the data. The data was taken from the course web :https://www.kth.se/social/files/547d95adf276544940c0ad5f/spdata.tar.gz
+This day was spent getting familiar with the data. The data was taken from the course web: https://www.kth.se/social/files/547d95adf276544940c0ad5f/spdata.tar.gz
 
-Methods were coded to parse it into Python and to split it into training and test sets. This done using biopythonIO to load each sequcence.
-And triming it to length 40. This was as in :http://www.cbs.dtu.dk/services/SignalP/paper-3.0.pdf .
+Methods were coded to parse it into Python and to split it into training and test sets. This done using biopythonIO to load each sequcence. And triming it to length 40. This was as in :http://www.cbs.dtu.dk/services/SignalP/paper-3.0.pdf .
 
-Split in to training and testing split was done using a  sklearn's *train_test_split. This was pretty straight for was to use. More details here
+Split in to training and testing split was done using a  sklearn's ´train_test_split´. This was pretty straight for was to use. More details here
 http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
 
 ## 18-12-2016
