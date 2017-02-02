@@ -38,4 +38,18 @@ MLP|
 ## 02-01-2017
 Plotting functions were made, where each one of the classifiers were plotted with its accuracy alongside its decision boundary. Confusion matrices were also plotted as to better understand the results.
 This day was spent trying to empirically discover the arguments that would lead to the best accuracy for finding the signal peptide, for both transmembrane and non-transmembrane samples.
+![signal peptides](./plots/classifiers_ntm_k3-6_h3.png)
+The plot above shows test perfomance of the different classifiers on non transmembrane data . Top left graph shows a 2d projection of the feature data with colors corroesponding to each class( with SP or no SP). Each of the other graphs depicts the decision boundries between different classes is shown by the different colours  - the number at the bottom right of the graphs is the overall test accuracy. In this case we can see that the MLP and SVC- rbf seem to be slightly better than the others.
+
+![signal peptides](./plots/confusion_ntm_k3-6_h3.png)
+Confusion matrices on the same data is shows the true postive/negative and false postive/negative rates of each classifer.
+
+Perfromance on transmembrane data was similar but however the was a marked increase in fales negative rate in MLP as the data was baised towards the negative in the transmembrane data set this can be seen below. The ensamble methods such as adaboot and random forest better managed this bias.
+
+![signal peptides](./plots/confusion_tm_k6-10_h3.png)
+
+## 04-01-2017
+I added the above findings in the report.
+
+
 
